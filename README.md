@@ -1,2 +1,2 @@
-# pesc
-Pseudorandom Encryption with Shuffling and Coding
+# PESC
+PESC - Pseudorandom Encryption with Shuffling and Coding
