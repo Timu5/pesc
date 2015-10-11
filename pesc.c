@@ -63,21 +63,21 @@ uint32_t HexToUInt32(char* str, int start)
 }
 
 // Generate exchange table for (De)Shuffling
-size_t* GenExchangeTable(size_t size)
+size_t* GenExchangeTable(size_t len)
 {
-	size_t* exTable = malloc((size - 1) * sizeof(size_t));
-	for (size_t i = size - 1; i > 0; i--)
-		exTable[size - 1 - i] = random() % (i + 1);
+	size_t* exTable = malloc((len - 1) * sizeof(size_t));
+	for (size_t i = len - 1; i > 0; i--)
+		exTable[len - 1 - i] = random() % (i + 1);
 	return exTable;
 }
 
 // Fisher–Yates shuffle
-void Shuffle(char* data, size_t size)
+void Shuffle(char* data, size_t len)
 {
-	size_t* exTable = GenExchangeTable(size);
-	for (size_t i = size - 1; i > 0; i--)
+	size_t* exTable = GenExchangeTable(len);
+	for (size_t i = len - 1; i > 0; i--)
 	{
-		size_t n = exTable[size - 1 - i];
+		size_t n = exTable[len - 1 - i];
 		char tmp = data[i];
 		data[i]  = data[n];
 		data[n]  = tmp;
@@ -85,12 +85,12 @@ void Shuffle(char* data, size_t size)
 	free(exTable);
 }
 
-void DeShuffle(char* data, size_t size)
+void DeShuffle(char* data, size_t len)
 {
-	size_t* exTable = GenExchangeTable(size);
-	for (size_t i = 1; i < size; i++)
+	size_t* exTable = GenExchangeTable(len);
+	for (size_t i = 1; i < len; i++)
 	{
-		size_t n = exTable[size - i - 1];
+		size_t n = exTable[len - i - 1];
 		char tmp = data[i];
 		data[i]  = data[n];
 		data[n]  = tmp;
@@ -99,38 +99,38 @@ void DeShuffle(char* data, size_t size)
 }
 
 // Simple text coding with PRNG
-void Code(char* data, size_t size)
+void Code(char* data, size_t len)
 {
-	for (size_t i = 0; i < size; i++)
+	for (size_t i = 0; i < len; i++)
 		data[i] += (char)(random()%255);
 }
 
-void DeCode(char* data, size_t size)
+void DeCode(char* data, size_t len)
 {
-	for (size_t i = 0; i < size; i++)
+	for (size_t i = 0; i < len; i++)
 		data[i] -= (char)(random()%255);
 }
 
 // Encrypt text
-void Encrypt(char* data, size_t size, uint32_t* keys, size_t kn)
+void Encrypt(char* data, size_t len, uint32_t* keys, size_t kn)
 {
 	for (size_t i = 0; i < kn; i++)
 	{
 		seed = keys[i];
-		Shuffle(data, size);
+		Shuffle(data, len);
 		seed = keys[kn - 1 - i];
-		Code(data, size);
+		Code(data, len);
 	}
 }
 
-void Decrypt(char* data, size_t size, uint32_t* keys, size_t kn)
+void Decrypt(char* data, size_t len, uint32_t* keys, size_t kn)
 {
 	for (size_t i = kn; i--;)
 	{
 		seed = keys[kn - 1 - i];
-		DeCode(data, size);
+		DeCode(data, len);
 		seed = keys[i];
-		DeShuffle(data, size);
+		DeShuffle(data, len);
 	}
 }
 
@@ -182,12 +182,12 @@ int main(int argc, char* argv[])
 	// read stdin into data buffer
 	char*   data      = malloc(1000 * sizeof(char));
 	size_t  allocSize = 1000;
-	size_t  size      = 0;
+	size_t  len       = 0;
 	uint32_t c;
 	while((c = getc(stdin)) != EOF)
 	{
-		data[size++] = (char)c;
-		if(allocSize == size+1)
+		data[len++] = (char)c;
+		if(allocSize == len+1)
 		{
 			allocSize *= 2;
 			data = realloc(data, allocSize * sizeof(char));
@@ -195,11 +195,11 @@ int main(int argc, char* argv[])
 	}
 
 	// perform crypting job
-	if(d) Decrypt(data, size, keys, kn);
-	else  Encrypt(data, size, keys, kn);
+	if(d) Decrypt(data, len, keys, kn);
+	else  Encrypt(data, len, keys, kn);
 
 	//print result to stdout
-	for(size_t i = 0; i < size; i++)
+	for(size_t i = 0; i < len; i++)
 		putchar(data[i]);
 
 	//clear before exit
