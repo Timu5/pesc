@@ -19,10 +19,8 @@
 #include <string.h>
 #include <stdint.h>
 
-#define string char*
-
 #ifdef RAND_MAX
-#undef RAND_MAX
+	#undef RAND_MAX
 #endif
 
 #define RAND_MAX 65534
@@ -40,20 +38,20 @@ uint32_t random()
 }
 
 // Convert 8 hex chars from string to uint32
-uint32_t HexToUInt32(string str, int start)
+uint32_t HexToUInt32(char* str, int start)
 {
 	uint32_t v = 0;
 	for (size_t i = 0; i < 8; i++)
 	{
 		char tmp = str[start + i];
 		#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-		if      (tmp >= 'A' && tmp <= 'F') v += (tmp - 'A' + 0xA) << ((7 - i) * 4);
-		else if (tmp >= 'a' && tmp <= 'f') v += (tmp - 'a' + 0xA) << ((7 - i) * 4);
-		else if (tmp >= '0' && tmp <= '9') v += (tmp - '0')       << ((7 - i) * 4);
+			if      (tmp >= 'A' && tmp <= 'F') v += (tmp - 'A' + 0xA) << ((7 - i) * 4);
+			else if (tmp >= 'a' && tmp <= 'f') v += (tmp - 'a' + 0xA) << ((7 - i) * 4);
+			else if (tmp >= '0' && tmp <= '9') v += (tmp - '0')       << ((7 - i) * 4);
 		#else
-		if      (tmp >= 'A' && tmp <= 'F') v += (tmp - 'A' + 0xA) << (i * 4);
-		else if (tmp >= 'a' && tmp <= 'f') v += (tmp - 'a' + 0xA) << (i * 4);
-		else if (tmp >= '0' && tmp <= '9') v += (tmp - '0')       << (i * 4);
+			if      (tmp >= 'A' && tmp <= 'F') v += (tmp - 'A' + 0xA) << (i * 4);
+			else if (tmp >= 'a' && tmp <= 'f') v += (tmp - 'a' + 0xA) << (i * 4);
+			else if (tmp >= '0' && tmp <= '9') v += (tmp - '0')       << (i * 4);
 		#endif
 		else
 		{
@@ -74,73 +72,73 @@ size_t* GenExchangeTable(size_t size)
 }
 
 // Fisher–Yates shuffle
-void Shuffle(string str, size_t size)
+void Shuffle(char* data, size_t size)
 {
 	size_t* exTable = GenExchangeTable(size);
 	for (size_t i = size - 1; i > 0; i--)
 	{
 		size_t n = exTable[size - 1 - i];
-		char tmp = str[i];
-		str[i]   = str[n];
-		str[n]   = tmp;
+		char tmp = data[i];
+		data[i]  = data[n];
+		data[n]  = tmp;
 	}
 	free(exTable);
 }
 
-void DeShuffle(string str, size_t size)
+void DeShuffle(char* data, size_t size)
 {
 	size_t* exTable = GenExchangeTable(size);
 	for (size_t i = 1; i < size; i++)
 	{
 		size_t n = exTable[size - i - 1];
-		char tmp = str[i];
-		str[i]   = str[n];
-		str[n]   = tmp;
+		char tmp = data[i];
+		data[i]  = data[n];
+		data[n]  = tmp;
 	}
 	free(exTable);
 }
 
 // Simple text coding with PRNG
-void Code(string str, size_t size)
+void Code(char* data, size_t size)
 {
 	for (size_t i = 0; i < size; i++)
-		str[i] += (char)(random()%255);
+		data[i] += (char)(random()%255);
 }
 
-void DeCode(string str, size_t size)
+void DeCode(char* data, size_t size)
 {
 	for (size_t i = 0; i < size; i++)
-		str[i] -= (char)(random()%255);
+		data[i] -= (char)(random()%255);
 }
 
 // Encrypt text
-void Encrypt(string str, size_t size, uint32_t* keys, size_t kn)
+void Encrypt(char* data, size_t size, uint32_t* keys, size_t kn)
 {
 	for (size_t i = 0; i < kn; i++)
 	{
 		seed = keys[i];
-		Shuffle(str,size);
+		Shuffle(data, size);
 		seed = keys[kn - 1 - i];
-		Code(str, size);
+		Code(data, size);
 	}
 }
 
-void Decrypt(string str, size_t size, uint32_t* keys, size_t kn)
+void Decrypt(char* data, size_t size, uint32_t* keys, size_t kn)
 {
 	for (size_t i = kn; i--;)
 	{
 		seed = keys[kn - 1 - i];
-		DeCode(str, size);
+		DeCode(data, size);
 		seed = keys[i];
-		DeShuffle(str, size);
+		DeShuffle(data, size);
 	}
 }
 
 #ifdef TEST
-int main(int argc, string argv[])
+int main(int argc, char* argv[])
 {
-	string org = "Hello from Encryption Hell!";
-	string enc = strdup(org);
+	char* org = "Hello from Encryption Hell!";
+	char* enc = strdup(org);
 
 	uint32_t* keys = malloc(4 * sizeof(uint32_t));
 	keys[0] = 0xFF123456;
@@ -155,14 +153,14 @@ int main(int argc, string argv[])
 	
 	if(strcmp(org, enc) == 0)
 	{
-		return 1;
+		return EXIT_SUCCESS;
 	}
-	return 0;
+	return EXIT_FAILURE;
 }
 
 #else
 
-int main(int argc, string argv[])
+int main(int argc, char* argv[])
 {
 	int d = 0; // Decrypt flag
 	if (argc == 3 && strcmp(argv[1], "-d")==0) d = 1;
@@ -182,9 +180,9 @@ int main(int argc, string argv[])
 		keys[i] = HexToUInt32(argv[1 + d], i * 8);
 
 	// read stdin into data buffer
-	string   data      = malloc(1000 * sizeof(char));
-	size_t   allocSize = 1000;
-	size_t   size      = 0;
+	char*   data      = malloc(1000 * sizeof(char));
+	size_t  allocSize = 1000;
+	size_t  size      = 0;
 	uint32_t c;
 	while((c = getc(stdin)) != EOF)
 	{
@@ -208,6 +206,6 @@ int main(int argc, string argv[])
 	free(keys);
 	free(data);
 	
-	return 0;
+	return EXIT_SUCCESS;
 }
 #endif
