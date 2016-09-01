@@ -1,6 +1,6 @@
 /*
  * PESC - Pseudorandom Encryption with Shuffling and Coding
- * Copyright (C) 2015 Mateusz Muszyński
+ * Copyright (C) 2016 Mateusz Muszyński
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,13 +25,13 @@
 
 #define RAND_MAX 65534
 
-uint32_t seed = 0xB00B1E5;
+uint32_t seed = 0xF1F2F3F4;
 
 // Park-Miller 31bit pseudorandom number generator
 // http://www.firstpr.com.au/dsp/rand31/p1192-park.pdf
 uint32_t random()
 {
-	if(seed == 0) seed = 0xB00B1E5;// seed with value of 0 is evil, I prefer B00B1E5
+	if(seed == 0) seed = 0F1F2F3F4;
 	uint32_t v = 16807 * (seed % 127773) - 2836 * (seed / 127773);
 	if (v < 0) v += 2147483647;
 	return ((seed = v) % ((uint32_t)RAND_MAX + 1));
@@ -153,8 +153,10 @@ int main(int argc, char* argv[])
 	
 	if(strcmp(org, enc) == 0)
 	{
+		free(enc);
 		return EXIT_SUCCESS;
 	}
+	free(enc);
 	return EXIT_FAILURE;
 }
 
